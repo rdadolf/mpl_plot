@@ -1,10 +1,12 @@
 # MPL Boilerplate
+import numpy as np
 import matplotlib
 import json
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib import rcParams
 import matplotlib.cm as cm
+import matplotlib.colors
 import matplotlib.patches
 import matplotlib as mpl
 def rgb(r,g,b):
@@ -17,6 +19,15 @@ teal    = rgb(98,189,153)
 orange  = rgb(250,174,83)
 #   luminance channel sweeps from dark to light, (for ordered comparisons)
 clr = [crimson, blue, teal, orange]
+def make_clr(n_colors):
+  '''Return an array of n_colors colors, interpolated from the primary four.'''
+  # Not the most efficient thing in the world...
+  source_xs = np.arange(0,4)*n_colors/4.
+  source_ys = zip(*[crimson,blue,teal,orange])
+  dest_xs = np.arange(0,n_colors)
+  dest_ys = np.array([np.interp(dest_xs,source_xs,source_y) for source_y in source_ys]).T.tolist()
+  return dest_ys
+
 mrk = ['o','D','^','s']
 rcParams['figure.figsize'] = (8,6) # (w,h)
 rcParams['figure.dpi'] = 150
@@ -42,7 +53,20 @@ rcParams['ytick.minor.pad'] = 8
 rcParams['font.weight'] = 100
 
 
-class MemoPlot(object):
+class Cacher(object):
+  '''Mix-in class for storing a snapshot of data.'''
+  def _save(self, blob, filename='cache.json'):
+    with open(filename,'w') as fp:
+      json.dump(blob, fp)
+      print '[MemoPlot]: File "'+str(filename)+'" saved.'
+
+  def _load(self, filename='cache.json'):
+    with open(filename,'r') as fp:
+      blob = json.load(fp)
+      print '[MemoPlot]: File "'+str(filename)+'" loaded.'
+      return blob
+
+class MemoPlot(Cacher):
   '''Abstract base class for a reproducible, persistable, and memoizing plotter.'''
   def __init__(self, mpl_params={}):
     # three JSON objects
@@ -64,14 +88,10 @@ class MemoPlot(object):
       'mpl_params': self.mpl_params,
       'config': self.config
     }
-    with open(filename,'w') as fp:
-      json.dump(D, fp)
-      print '[MemoPlot]: File "'+str(filename)+'" saved.'
+    self._save(D,filename)
 
   def load(self, filename='memoplot.json'):
-    with open(filename,'r') as fp:
-      D = json.load(fp)
-      self.data = D['data']
-      self.mpl_params = D['mpl_params']
-      self.config = D['config']
-      print '[MemoPlot]: File "'+str(filename)+'" loaded.'
+    D = self._load(filename)
+    self.data = D['data']
+    self.mpl_params = D['mpl_params']
+    self.config = D['config']
