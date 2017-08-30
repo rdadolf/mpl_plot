@@ -1,4 +1,7 @@
 # mpl_plot.py
+
+[![Build Status](https://travis-ci.org/rdadolf/mpl_plot.svg?branch=master)](https://travis-ci.org/rdadolf/mpl_plot)
+
 Utilties for prettier plots.
 
 This is a one-file Python module for matplotlib users.
