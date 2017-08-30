@@ -4,7 +4,7 @@ before_install:
   - pip install pylint matplotlib
 
 script:
-  - pylint -rn mpl_plot
+  - pylint -rn -sn mpl_plot.py
   - python -c 'from mpl_plot import *'
 
 notifications:
